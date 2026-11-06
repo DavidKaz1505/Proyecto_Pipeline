@@ -1,0 +1,13 @@
+VALIDACIÓN
+[OK] Registros: esperados 2237, obtenidos 2237
+[OK] Fechas duplicadas en el dataset integrado: 0
+[OK] Nulos en radiación o temperatura: 0
+[OK] Rangos: radiación mín 910 | temperatura mín 22.0 y máx 36.0
+
+RESULTADOS
+Días analizados: 2237
+Correlación de Pearson:  0.600 -> moderada, positiva (si sube una, tiende a subir la otra)
+Correlación de Spearman: 0.583 -> moderada, positiva (si sube una, tiende a subir la otra)
+Regresión lineal: por cada +1 °C de temperatura máxima, la radiación diaria cambia en promedio 317 Wh/m²
+R² = 0.360: la temperatura máxima está asociada con cerca del 36 % de la variación de la radiación diaria
+Nota: una correlación mide relación, no prueba que una variable cause la otra.
