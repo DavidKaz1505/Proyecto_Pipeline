@@ -29,38 +29,55 @@ Ambas fuentes se descargaron del portal de atención al ciudadano del IDEAM (ate
 ## 3. Estructura del proyecto
 
 ```
-proyecto_etl/
+Proyecto_Pipeline/
 ├── data/
 │   ├── raw/                 # archivos originales (no se modifican)
 │   └── processed/           # dataset integrado (datos_integrados.csv)
 ├── src/
-│   ├── extraction.py        # lectura de los CSV
+│   ├── __init__.py          # marca src como paquete
+│   ├── extraction.py        # lectura de los CSV y validación de ruta y esquema
 │   ├── cleaning.py          # diagnóstico de calidad y limpieza
 │   ├── transformation.py    # separar fecha/hora, agregar a diario, filtrar cobertura
 │   ├── integration.py       # merge por fecha
 │   └── validation.py        # validaciones, correlación y gráfica
 ├── outputs/                 # diagnóstico, resultados y gráfica
-├── requirements.txt
+├── docs/                    # informe técnico del segundo avance (Word y PDF)
+├── requirements.txt         # dependencias (pandas, matplotlib, scipy)
+├── .gitignore               # excluye venv, caches y archivos .env
 ├── main.py                  # punto de entrada: ejecuta todo el pipeline
 └── README.md
 ```
 
+**Documentación:** el informe técnico (arquitectura, decisiones técnicas, validaciones y hallazgos iniciales) está en `docs/Informe_Tecnico_Segundo_Avance.docx`, con copia en PDF en `docs/Informe_Tecnico_Segundo_Avance.pdf`.
+
 ## 4. Cómo ejecutar
 
 1. Tener Python 3 instalado `Python 3.14.6`
-2. Desde la carpeta `proyecto_etl`, crear y activar un entorno virtual:
+2. Desde la carpeta `Proyecto_Pipeline`, crear y activar un entorno virtual:
    - Windows: `python -m venv venv` y luego `venv\Scripts\activate` (Copiar y pegar en la terminal).
    - Mac/Linux: `python3 -m venv venv` y luego `source venv/bin/activate`
 3. Instalar dependencias: `python -m pip install -r requirements.txt`
-   Librerías usadas: pandas, matplotlib y scipy (scipy es necesaria para calcular la correlación de Spearman).
+   Librerías usadas: pandas, matplotlib y scipy (scipy es necesaria para calcular la correlación de Spearman). El pipeline se probó con pandas 3.0.6, matplotlib 3.11.2 y scipy 1.18.1.
 4. Verificar que `Radiacion.csv` y `Temperatura.csv` estén en `data/raw/`.
-5. Ejecutar: `python main.py`
+5. Ejecutar: `python main.py` (las rutas se calculan con `pathlib` a partir de la ubicación de `main.py`, por lo que funciona desde cualquier carpeta).
 
 Salidas generadas:
 - `data/processed/datos_integrados.csv`: dataset consolidado (un registro por día).
 - `outputs/diagnostico_calidad.csv`: problemas de calidad cuantificados.
 - `outputs/resultados.txt`: validaciones y correlaciones.
 - `outputs/dispersion_temp_vs_radiacion.png`: gráfica de dispersión.
+
+### Manejo de errores y validaciones de entrada
+
+El pipeline se detiene con un mensaje claro y código de salida 1 (nunca falla en silencio) en estos casos:
+
+| Situación | Dónde se controla | Mensaje |
+|---|---|---|
+| Falta un archivo de `data/raw/` o no es un `.csv` | `extraction.py` | `No se encontró el archivo: ...` |
+| El CSV está vacío o no se puede leer | `extraction.py` | `No se pudo leer ... como CSV` |
+| Faltan columnas esperadas (`Fecha`, `Valor`, ...) | `extraction.py` | `faltan columnas [...]` |
+| `Valor` contiene texto en vez de números | `extraction.py` | `la columna 'Valor' debe ser numérica` |
+| El dataset integrado queda vacío o un control de validación da `[FALLA]` | `main.py` | `La validación del dataset integrado falló` (no se guarda el dataset) |
 
 ## 5. Diagnóstico de calidad (datos originales)
 
@@ -112,6 +129,8 @@ El mínimo de horas por día (`MIN_HORAS` en `main.py`) es una decisión del equ
 - Se eligió 20 horas porque conserva una gran cantidad de días (2.237) sin cambiar la conclusión.
 
 Cualquier persona puede reproducir esta tabla cambiando el valor de `MIN_HORAS` en `main.py` y ejecutando `python main.py`.
+
+**Seguridad:** el repositorio no contiene claves de API, tokens ni credenciales; `.gitignore` excluye `.env` por si se agregan en el futuro. Tampoco hay rutas absolutas locales en el código.
 
 **Conservación de los datos originales:** los archivos de `data/raw/` nunca se modifican y cada función trabaja sobre una copia del DataFrame.
 

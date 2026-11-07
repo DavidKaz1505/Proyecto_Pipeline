@@ -10,8 +10,11 @@ Punto de entrada del proyecto. Ejecuta el pipeline ETL completo en orden:
   5. Integración     (src/integration.py)
   6. Validación y resultados (src/validation.py)
 
-Cómo ejecutarlo (desde la carpeta proyecto_etl):  python main.py
+Cómo ejecutarlo (desde cualquier carpeta):  python main.py
 """
+
+import sys
+from pathlib import Path
 
 import pandas as pd
 
@@ -20,12 +23,21 @@ from src import extraction, cleaning, transformation, integration, validation
 # ----------------------------------------------------------------------
 # Parámetros del proyecto
 # ----------------------------------------------------------------------
-RUTA_RADIACION = "data/raw/Radiacion.csv"
-RUTA_TEMPERATURA = "data/raw/Temperatura.csv"
+# Todas las rutas se construyen a partir de la ubicación de este archivo,
+# así el pipeline funciona sin importar desde qué carpeta se ejecute.
+BASE_DIR = Path(__file__).resolve().parent
+RUTA_RADIACION = BASE_DIR / "data" / "raw" / "Radiacion.csv"
+RUTA_TEMPERATURA = BASE_DIR / "data" / "raw" / "Temperatura.csv"
+DIR_PROCESADOS = BASE_DIR / "data" / "processed"
+DIR_SALIDAS = BASE_DIR / "outputs"
 MIN_HORAS = 20  # un día de radiación se conserva solo si tiene 20 horas o más
 
 
 def main():
+    # Las carpetas de salida se crean si no existen (git no guarda carpetas vacías)
+    DIR_PROCESADOS.mkdir(parents=True, exist_ok=True)
+    DIR_SALIDAS.mkdir(parents=True, exist_ok=True)
+
     # ------------------------------------------------------------------
     print("\n=== 1. EXTRACCIÓN ===")
     rad_raw = extraction.cargar_csv(RUTA_RADIACION)
@@ -36,7 +48,7 @@ def main():
     diag_rad = cleaning.diagnosticar(rad_raw, "Radiación", frecuencia="h")
     diag_temp = cleaning.diagnosticar(temp_raw, "Temperatura", frecuencia="D")
     pd.DataFrame([diag_rad, diag_temp]).to_csv(
-        "outputs/diagnostico_calidad.csv", index=False, encoding="utf-8-sig"
+        DIR_SALIDAS / "diagnostico_calidad.csv", index=False, encoding="utf-8-sig"
     )
 
     # ------------------------------------------------------------------
@@ -78,16 +90,26 @@ def main():
     print("\n=== 6. VALIDACIÓN ===")
     lineas_validacion = validation.validar_integracion(rad_diaria, temp, datos)
 
+    # Si algún control falla o no hay datos, el pipeline se detiene: no se
+    # guarda un dataset que no pasó la validación.
+    fallas = [linea for linea in lineas_validacion if linea.startswith("[FALLA]")]
+    if datos.empty or fallas:
+        raise ValueError(
+            "La validación del dataset integrado falló: "
+            + ("dataset vacío. " if datos.empty else "")
+            + " | ".join(fallas)
+        )
+
     # Guardamos el primer dataset consolidado
-    datos.to_csv("data/processed/datos_integrados.csv", index=False, encoding="utf-8-sig")
+    datos.to_csv(DIR_PROCESADOS / "datos_integrados.csv", index=False, encoding="utf-8-sig")
     print("  Dataset consolidado guardado en data/processed/datos_integrados.csv")
 
     # ------------------------------------------------------------------
     print("\n=== 7. RESULTADOS ===")
     pearson, spearman, lineas_resultados = validation.calcular_resultados(datos)
-    validation.graficar_dispersion(datos, "outputs/dispersion_temp_vs_radiacion.png")
+    validation.graficar_dispersion(datos, DIR_SALIDAS / "dispersion_temp_vs_radiacion.png")
 
-    with open("outputs/resultados.txt", "w", encoding="utf-8") as archivo:
+    with open(DIR_SALIDAS / "resultados.txt", "w", encoding="utf-8") as archivo:
         archivo.write("VALIDACIÓN\n" + "\n".join(lineas_validacion) + "\n\n")
         archivo.write("RESULTADOS\n" + "\n".join(lineas_resultados) + "\n")
     print("  Resumen guardado en outputs/resultados.txt")
@@ -96,4 +118,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except (FileNotFoundError, ValueError, KeyError) as error:
+        # Error explícito y código de salida distinto de 0: nunca falla en silencio
+        print(f"\nERROR: {error}", file=sys.stderr)
+        sys.exit(1)
