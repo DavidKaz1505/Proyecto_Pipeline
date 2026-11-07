@@ -1,13 +1,20 @@
 VALIDACIÓN
+[OK] Estructura: columnas presentes, 2237 registros
+[OK] Fechas no interpretables: integrado 0, radiación 0, temperatura 0
 [OK] Registros: esperados 2237, obtenidos 2237
-[OK] Fechas duplicadas en el dataset integrado: 0
-[OK] Nulos en radiación o temperatura: 0
-[OK] Rangos: radiación mín 910 | temperatura mín 22.0 y máx 36.0
+[OK] Fechas duplicadas: integrado 0, radiación 0, temperatura 0
+[OK] Cobertura: 98.5 % de los días de la fuente más corta están en el integrado
+[OK] Valores: nulos o no numéricos 0, infinitos 0
+[OK] Rangos: radiación 910-7428 Wh/m², temperatura 22.0-36.0 °C
+[OK] Muestra: 2237 pares válidos (mínimo 30), variabilidad sí
+[ALERTA] Continuidad: 1346 días sin dato entre 2006-12-10 y 2016-09-30
+[OK] Atípicos (IQR): radiación 1, temperatura 12; valores idénticos consecutivos máx 4
 
 RESULTADOS
 Días analizados: 2237
-Correlación de Pearson:  0.600 -> moderada, positiva (si sube una, tiende a subir la otra)
-Correlación de Spearman: 0.583 -> moderada, positiva (si sube una, tiende a subir la otra)
-Regresión lineal: por cada +1 °C de temperatura máxima, la radiación diaria cambia en promedio 317 Wh/m²
+Correlación de Pearson:  0.600 (IC 95 %: [0.573, 0.626], p < 0.001) -> moderada, positiva (si sube una, tiende a subir la otra)
+Correlación de Spearman: 0.583 (p < 0.001) -> moderada, positiva (si sube una, tiende a subir la otra)
+Regresión lineal: por cada +1 °C de temperatura máxima, la radiación diaria cambia en promedio 317 Wh/m² (IC 95 %: [300, 335])
 R² = 0.360: la temperatura máxima está asociada con cerca del 36 % de la variación de la radiación diaria
+Error del ajuste (RMSE): 966 Wh/m²
 Nota: una correlación mide relación, no prueba que una variable cause la otra.
