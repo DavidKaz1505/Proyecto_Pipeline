@@ -1,9 +1,9 @@
 # Proyecto ETL: temperatura máxima y radiación solar en Ibagué
 
 **Integrantes:**
-- David Casallas
-- Samuel Sarmiento
-- Tomas Cardenas
+-  David Casallas
+-  Samuel Sarmiento
+-  Tomas Cardenas
 
 **Entrega:** Segundo avance del proyecto, 9 de noviembre de 2026
 
