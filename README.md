@@ -7,6 +7,23 @@
 
 **Entrega:** Segundo avance del proyecto, 9 de noviembre de 2026
 
+## Inicio rápido
+
+Este proyecto lee dos archivos CSV del IDEAM (radiación solar y temperatura máxima de Ibagué), los limpia, los une en una sola tabla diaria y calcula qué relación hay entre ambas variables. **Los datos ya vienen incluidos en el repositorio**, no hay que descargar nada.
+
+Si ya tiene Python 3 instalado, abra una terminal **dentro de la carpeta del proyecto** (la que contiene `main.py`) y ejecute:
+
+```
+python -m venv venv
+venv\Scripts\activate
+python -m pip install -r requirements.txt
+python main.py
+```
+
+(En Mac o Linux, la segunda línea es `source venv/bin/activate` y se escribe `python3` en lugar de `python`.)
+
+Si todo sale bien, el programa termina con el mensaje **`Pipeline terminado.`** Los pasos detallados, lo que debe ver en pantalla y las soluciones a los problemas más comunes están en la sección 4.
+
 ## 1. Problema y objetivo
 
 **Pregunta:** ¿qué relación existe entre la temperatura máxima diaria y la radiación solar diaria en Ibagué entre diciembre de 2006 y septiembre de 2016?
@@ -50,22 +67,104 @@ Proyecto_Pipeline/
 
 **Documentación:** el informe técnico (arquitectura, decisiones técnicas, validaciones y hallazgos iniciales) está en `docs/Informe_Tecnico_Segundo_Avance.docx`, con copia en PDF en `docs/Informe_Tecnico_Segundo_Avance.pdf`.
 
-## 4. Cómo ejecutar
+## 4. Cómo ejecutar (paso a paso)
 
-1. Tener Python 3 instalado `Python 3.14.6`
-2. Desde la carpeta `Proyecto_Pipeline`, crear y activar un entorno virtual:
-   - Windows: `python -m venv venv` y luego `venv\Scripts\activate` (Copiar y pegar en la terminal).
-   - Mac/Linux: `python3 -m venv venv` y luego `source venv/bin/activate`
-3. Instalar dependencias: `python -m pip install -r requirements.txt`
-   Librerías usadas: pandas, matplotlib y scipy (scipy es necesaria para calcular la correlación de Spearman). El pipeline se probó con pandas 3.0.6, matplotlib 3.11.2 y scipy 1.18.1.
-4. Verificar que `Radiacion.csv` y `Temperatura.csv` estén en `data/raw/`.
-5. Ejecutar: `python main.py` (las rutas se calculan con `pathlib` a partir de la ubicación de `main.py`, por lo que funciona desde cualquier carpeta).
+Esta guía está escrita para una persona que **no conoce el proyecto**. Funciona en Windows, Mac y Linux.
 
-Salidas generadas:
-- `data/processed/datos_integrados.csv`: dataset consolidado (un registro por día).
-- `outputs/diagnostico_calidad.csv`: problemas de calidad cuantificados.
-- `outputs/resultados.txt`: validaciones y correlaciones.
-- `outputs/dispersion_temp_vs_radiacion.png`: gráfica de dispersión.
+### Paso 1: tener Python 3
+
+Abra una terminal (ver el paso 3 para saber cómo) y escriba:
+
+```
+python --version
+```
+
+- Debe aparecer algo como `Python 3.12.3`. El equipo desarrolló y probó el proyecto con Python 3.14.6.
+- En Windows, si dice que `python` no se reconoce, pruebe con `py --version`. Si tampoco funciona, instale Python desde https://www.python.org/downloads/ y **marque la casilla "Add Python to PATH"** durante la instalación. Luego cierre y vuelva a abrir la terminal.
+- En Mac y Linux use `python3` en lugar de `python` en todos los comandos de esta guía.
+
+### Paso 2: obtener el código
+
+- **Opción A (sin Git):** en la página del repositorio de GitHub, botón verde **Code → Download ZIP**. Descomprima el archivo en cualquier carpeta.
+- **Opción B (con Git):** `git clone https://github.com/DavidKaz1505/Proyecto_Pipeline.git`
+
+Los archivos de datos (`Radiacion.csv` y `Temperatura.csv`) ya están incluidos en `data/raw/`. No hay que descargar ni mover nada.
+
+### Paso 3: abrir una terminal dentro de la carpeta del proyecto
+
+La carpeta correcta es la que contiene el archivo `main.py`.
+
+- **Con Visual Studio Code:** *Archivo → Abrir carpeta* y elija la carpeta del proyecto; luego *Terminal → Nueva terminal*.
+- **Windows sin VS Code:** abra la carpeta en el Explorador de archivos, haga clic derecho en un espacio vacío y elija **Abrir en Terminal** (en Windows 10: mantenga presionada la tecla Shift, clic derecho y **Abrir ventana de PowerShell aquí**).
+- **Mac o Linux:** abra la aplicación Terminal, escriba `cd ` (con un espacio al final), arrastre la carpeta del proyecto hasta la ventana de la terminal y presione Enter.
+
+Para comprobar que está en el lugar correcto, escriba `dir` (Windows) o `ls` (Mac/Linux). Debe ver `main.py`, `README.md`, `requirements.txt` y las carpetas `src` y `data`.
+
+### Paso 4: crear y activar un entorno virtual
+
+El entorno virtual mantiene las librerías del proyecto separadas del resto del computador.
+
+| Sistema | Crear | Activar |
+|---|---|---|
+| Windows (PowerShell o VS Code) | `python -m venv venv` | `venv\Scripts\activate` |
+| Mac / Linux | `python3 -m venv venv` | `source venv/bin/activate` |
+
+Cuando quede activado, aparece **`(venv)`** al inicio de la línea de la terminal.
+
+> **Si en Windows aparece un error rojo que menciona "la ejecución de scripts está deshabilitada":** ejecute una sola vez `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, responda `S` (o `Y`) y vuelva a activar el entorno.
+
+### Paso 5: instalar las librerías
+
+```
+python -m pip install -r requirements.txt
+```
+
+Instala `pandas`, `matplotlib` y `scipy` (esta última es necesaria para calcular la correlación de Spearman). Puede tardar uno o dos minutos y termina con `Successfully installed ...`. El equipo lo probó con pandas 3.0.6, matplotlib 3.11.2 y scipy 1.18.1; `requirements.txt` exige como mínimo pandas 2.2, matplotlib 3.8 y scipy 1.12.
+
+### Paso 6: ejecutar el proyecto
+
+```
+python main.py
+```
+
+El programa funciona aunque se ejecute desde otra carpeta, porque calcula las rutas a partir de la ubicación de `main.py`. Tarda unos segundos.
+
+### Paso 7: comprobar que salió bien
+
+La salida se muestra por etapas (`=== 1. EXTRACCIÓN ===` hasta `=== 7. RESULTADOS ===`) y termina con **`Pipeline terminado.`** Estos son los valores que debe ver:
+
+| Qué buscar en pantalla | Valor esperado |
+|---|---|
+| Archivos cargados | Radiacion.csv: 57020 filas · Temperatura.csv: 3531 filas |
+| Días de radiación con al menos 20 horas | 2270 (se descartan 272) |
+| Dataset integrado | 2237 filas |
+| Las 4 validaciones | todas con `[OK]` |
+| Correlación de Pearson | 0.600 |
+| Correlación de Spearman | 0.583 |
+| Regresión lineal | 317 Wh/m² por cada +1 °C |
+| R² | 0.360 |
+
+### Paso 8: ver los resultados generados
+
+| Archivo | Qué contiene |
+|---|---|
+| `data/processed/datos_integrados.csv` | Tabla final: un registro por día (`fecha_dia`, `radiacion_diaria`, `n_horas`, `temp_max_c`) |
+| `outputs/diagnostico_calidad.csv` | Los problemas de calidad de los datos originales, cuantificados |
+| `outputs/resultados.txt` | Validaciones y resultados estadísticos |
+| `outputs/dispersion_temp_vs_radiacion.png` | Gráfica de dispersión temperatura vs radiación |
+
+Estos archivos ya vienen en el repositorio; al ejecutar el programa se **vuelven a generar** (se sobrescriben con el mismo contenido).
+
+### Problemas comunes
+
+| Mensaje o síntoma | Causa | Solución |
+|---|---|---|
+| `python` no se reconoce | Python no está instalado o no está en el PATH | Ver el paso 1 |
+| `ModuleNotFoundError: No module named 'pandas'` (o `scipy`, `matplotlib`) | El entorno virtual no está activo o faltó el paso 5 | Active el entorno (`(venv)` visible) y repita el paso 5 |
+| `ModuleNotFoundError: No module named 'src'` | La terminal no está en la carpeta del proyecto, o falta el archivo `src/__init__.py` | Repita el paso 3 y compruebe que existe la carpeta `src` con sus archivos |
+| `ERROR: No se encontró el archivo ... data/raw/...` | Falta un CSV o cambió de nombre | Deje `Radiacion.csv` y `Temperatura.csv` en `data/raw/` con esos nombres exactos |
+| `PermissionError` al guardar un resultado | Un archivo de `outputs/` o `data/processed/` está abierto en Excel u otro programa | Ciérrelo y vuelva a ejecutar |
+| Los números no coinciden con la tabla del paso 7 | Se modificó un dato o el valor de `MIN_HORAS` en `main.py` | Vuelva a descargar el proyecto sin cambios |
 
 ### Manejo de errores y validaciones de entrada
 
